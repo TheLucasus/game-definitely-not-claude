@@ -104,6 +104,7 @@ shape = SubResource("BoxShape3D_dfxch")
 mesh = SubResource("BoxMesh_34yov")
 
 [node name="SpecialAOE" type="Area3D" parent="Player" unique_id=1699820856]
+visible = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player/SpecialAOE" unique_id=500251425]
 shape = SubResource("SphereShape3D_dgwa5")

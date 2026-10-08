@@ -9,9 +9,18 @@ const TURN_SPEED = 10.0
 const JUMP_VELOCITY = 5.0
 const XP_PER_LEVEL = 10
 const ATTACK_ACTIVE_TIME = 0.15
-const ATTACK_COOLDOWN = 0.35
+const ATTACK_COOLDOWN = 0.1
+const COMBO_WINDOW = 0.6
+const FINISHER_COOLDOWN = 0.4
+const COMBO = [
+	{"kind": "horizontal", "from": -60.0, "to": 60.0},
+	{"kind": "horizontal", "from": 60.0, "to": -60.0},
+	{"kind": "vertical", "from": 70.0, "to": -20.0},
+]
+const SWING_RADIUS = 1.5
 const SPECIAL_ACTIVE_TIME = 0.2
 const SPECIAL_COOLDOWN = 2.0
+const FlameSpirit = preload("res://flame_spirit.gd")
 
 var max_health = 100
 var level = 1
@@ -24,10 +33,19 @@ var start_position = Vector3.ZERO
 var start_rotation = Vector3.ZERO
 var is_attacking = false
 var hit_bodies = []
+var is_swinging = false
+var swing_elapsed = 0.0
+var current_swing = {}
+var combo_step = 0
+var combo_timer = 0.0
+var attack_queued = false
+var hitbox_base_y = 0.0
 var special_on_cooldown = false
+var spirit = null
 var special_hit_bodies = []
 
 @onready var hitbox = $AttackHitbox
+@onready var camera_pivot = get_node("../CameraPivot")
 @onready var hitbox_visual = $AttackHitbox/Visual
 @onready var special_aoe = $SpecialAOE
 @onready var special_visual = $SpecialAOE/Visual
@@ -35,6 +53,7 @@ var special_hit_bodies = []
 func _ready():
 	start_position = global_position
 	start_rotation = rotation
+	hitbox_base_y = hitbox.position.y
 
 	# The hitboxes start switched off and hidden
 	hitbox.monitoring = false
@@ -92,23 +111,69 @@ func respawn():
 	global_position = start_position
 	rotation = start_rotation
 	velocity = Vector3.ZERO
+	
+# Places the hitbox along the current swing. t goes from 0 (start) to 1 (end).
+func set_swing_pose(swing, t):
+	var angle = deg_to_rad(lerpf(swing["from"], swing["to"], t))
+	if swing["kind"] == "horizontal":
+		hitbox.position = Vector3(-sin(angle) * SWING_RADIUS, hitbox_base_y, -cos(angle) * SWING_RADIUS)
+		hitbox.rotation = Vector3(0, angle, 0)
+	else:
+		hitbox.position = Vector3(0, hitbox_base_y + sin(angle) * SWING_RADIUS, -cos(angle) * SWING_RADIUS)
+		hitbox.rotation = Vector3(angle, 0, 0)
+
+func reset_hitbox_pose():
+	hitbox.position = Vector3(0, hitbox_base_y, -SWING_RADIUS)
+	hitbox.rotation = Vector3.ZERO
 
 func attack():
-	if is_attacking:
+	if is_instance_valid(spirit):
 		return
+	if is_attacking:
+		# Remember one early press and use it as soon as this swing is done
+		attack_queued = true
+		return
+	start_swing()
+
+func start_swing():
 	is_attacking = true
+	attack_queued = false
 	hit_bodies.clear()
+
+	# Continue the combo if the last swing was recent, otherwise start over
+	if combo_timer <= 0.0:
+		combo_step = 0
+	current_swing = COMBO[combo_step]
+
+	swing_elapsed = 0.0
+	is_swinging = true
+	set_swing_pose(current_swing, 0.0)
 	hitbox.monitoring = true
 	hitbox_visual.visible = true
 
-	# Hitbox is active for a short window
+	# The hitbox sweeps along the swing during this window
 	await get_tree().create_timer(ATTACK_ACTIVE_TIME).timeout
+	is_swinging = false
 	hitbox.monitoring = false
 	hitbox_visual.visible = false
+	reset_hitbox_pose()
 
-	# Then a cooldown before the next attack is allowed
-	await get_tree().create_timer(ATTACK_COOLDOWN).timeout
+	# Move to the next swing, or finish the combo with a longer recovery
+	var cooldown = ATTACK_COOLDOWN
+	if combo_step >= COMBO.size() - 1:
+		combo_step = 0
+		combo_timer = 0.0
+		cooldown = FINISHER_COOLDOWN
+	else:
+		combo_step += 1
+		combo_timer = COMBO_WINDOW
+
+	await get_tree().create_timer(cooldown).timeout
 	is_attacking = false
+
+	# If Z was pressed during the swing, continue straight away
+	if attack_queued:
+		start_swing()
 
 func _on_hitbox_body_entered(body):
 	if body == self:
@@ -120,21 +185,20 @@ func _on_hitbox_body_entered(body):
 		body.take_damage(roundi(attack_damage))
 
 func special_attack():
-	if is_attacking or special_on_cooldown:
+	if is_attacking or special_on_cooldown or is_instance_valid(spirit):
 		return
-	is_attacking = true
 	special_on_cooldown = true
-	special_hit_bodies.clear()
-	special_aoe.monitoring = true
-	special_visual.visible = true
+	var forward = -global_transform.basis.z
+	spirit = FlameSpirit.new()
+	get_parent().add_child(spirit)
+	spirit.launch(global_position + Vector3(0, 0.25, 0) + forward * 1.2, forward)
+	spirit.finished.connect(_on_spirit_finished)
+	camera_pivot.follow_target = spirit
 
-	# The area is active for a short window
-	await get_tree().create_timer(SPECIAL_ACTIVE_TIME).timeout
-	special_aoe.monitoring = false
-	special_visual.visible = false
-	is_attacking = false
-
-	# The special move needs time to recharge
+func _on_spirit_finished():
+	camera_pivot.follow_target = null
+	spirit = null
+	# Recharge before the next use
 	await get_tree().create_timer(SPECIAL_COOLDOWN).timeout
 	special_on_cooldown = false
 
@@ -156,11 +220,16 @@ func _unhandled_input(event):
 			attack()
 		if event.keycode == KEY_PERIOD:
 			special_attack()
-		if event.keycode == KEY_SPACE and is_on_floor():
+		if event.keycode == KEY_SPACE and is_on_floor() and not is_instance_valid(spirit):
 			velocity.y = JUMP_VELOCITY
 			
 
 func _physics_process(delta):
+	combo_timer = maxf(combo_timer - delta, 0.0)
+	if is_swinging:
+		swing_elapsed += delta
+		var t = clampf(swing_elapsed / ATTACK_ACTIVE_TIME, 0.0, 1.0)
+		set_swing_pose(current_swing, t)
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 	if global_position.y < -20.0:
@@ -176,7 +245,10 @@ func _physics_process(delta):
 		input_side += 1
 	if Input.is_physical_key_pressed(KEY_A):
 		input_side -= 1
-
+	# Stay still while controlling the flame spirit
+	if is_instance_valid(spirit):
+		input_side = 0.0
+		input_forward = 0.0
 	var camera = get_viewport().get_camera_3d()
 	var forward = -camera.global_transform.basis.z
 	forward.y = 0

@@ -20,6 +20,9 @@ var target_roll_degrees = 0.0
 var target_pitch_degrees = NORMAL_PITCH
 var raise_timer = 0.0
 
+# What the camera follows. null = the player. The flame spirit sets this.
+var follow_target = null
+
 @onready var player = get_node("../Player")
 
 func _ready():
@@ -55,8 +58,11 @@ func _physics_process(delta):
 		target_pitch_degrees = NORMAL_PITCH
 
 func _process(delta):
-	# Smoothly follow the player
-	var target_position = player.global_position + HEIGHT_OFFSET
+	# Smoothly follow the player (or the flame spirit while it is active)
+	var follow = player
+	if is_instance_valid(follow_target):
+		follow = follow_target
+	var target_position = follow.global_position + HEIGHT_OFFSET
 	global_position = global_position.lerp(target_position, FOLLOW_SPEED * delta)
 
 	# Smoothly rotate left/right
