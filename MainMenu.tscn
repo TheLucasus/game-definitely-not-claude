@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://cjorr1jm0q763"]
+
+[ext_resource type="Script" uid="uid://d2sy5q6odkcy5" path="res://main_menu.gd" id="1_i26rj"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dfxch"]
+bg_color = Color(0.05490196, 0.2509804, 0.5058824, 1)
+
+[node name="MainMenu" type="Control" unique_id=1677097193]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("1_i26rj")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1380770588]
+layout_mode = 1
+offset_left = -280.0
+offset_top = -80.5
+offset_right = 280.0
+offset_bottom = 80.5
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="StartButton" type="Button" parent="VBoxContainer" unique_id=1679884287]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.49411765, 0.7137255, 0.9098039, 1)
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_dfxch")
+text = "Start Game"
+
+[node name="SettingsButton" type="Button" parent="VBoxContainer" unique_id=352728355]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.49411765, 0.7137255, 0.9098039, 1)
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_dfxch")
+text = "Settings"
+
+[node name="ExitButton" type="Button" parent="VBoxContainer" unique_id=1978589680]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.49411765, 0.7137255, 0.9098039, 1)
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_dfxch")
+text = "Exit"
+
+[connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]

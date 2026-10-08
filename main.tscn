@@ -1,0 +1,176 @@
+[gd_scene format=3 uid="uid://d2ym3cjcfpwwc"]
+
+[ext_resource type="Script" uid="uid://w05lhedadoh4" path="res://player.gd" id="1_ig7tw"]
+[ext_resource type="Texture2D" uid="uid://dmjvnkrgdwv5t" path="res://FINAL00.png" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://c8qvxdpyxbh22" path="res://camera_pivot.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://dm4cifdeepben" path="res://hud_label.gd" id="4_1bvp3"]
+[ext_resource type="Script" uid="uid://dlhgps54hex7x" path="res://enemy.gd" id="5_lquwl"]
+[ext_resource type="Script" uid="uid://boydtlargak7m" path="res://reset_button.gd" id="6_7mycd"]
+[ext_resource type="Script" uid="uid://djt5ajissxut5" path="res://level.gd" id="7_272bh"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_dgwa5"]
+size = Vector2(40, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dgwa5"]
+size = Vector3(40, 1, 40)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h2yge"]
+albedo_texture = ExtResource("2_0xm2m")
+
+[sub_resource type="BoxMesh" id="BoxMesh_dgwa5"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_1bvp3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lquwl"]
+albedo_texture = SubResource("CompressedTexture2D_1bvp3")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_34yov"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dfxch"]
+size = Vector3(0.5, 0.5, 1.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_34yov"]
+size = Vector3(0.5, 0.5, 1.5)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_dgwa5"]
+radius = 2.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_dgwa5"]
+radius = 2.0
+height = 4.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_dfxch"]
+radius = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_34yov"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dfxch"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fthc2"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_dgwa5"]
+size = Vector2(1.5, 0.15)
+
+[sub_resource type="QuadMesh" id="QuadMesh_dfxch"]
+size = Vector2(1.6, 0.25)
+center_offset = Vector3(0, 0, -0.02)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ic1xh"]
+size = Vector3(0.5, 0.5, 1.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fthc2"]
+size = Vector3(0.5, 0.5, 1.5)
+
+[node name="Main" type="Node3D" unique_id=1796398711]
+
+[node name="ResetButton" type="Node3D" parent="." unique_id=1495395571]
+script = ExtResource("6_7mycd")
+
+[node name="Level" type="Node3D" parent="." unique_id=23546700]
+script = ExtResource("7_272bh")
+
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=78526245]
+mesh = SubResource("PlaneMesh_dgwa5")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Floor" unique_id=880754891]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor/StaticBody3D" unique_id=369450137]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_dgwa5")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=801002362]
+transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, 0, 0, 0)
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1324686638]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 16)
+script = ExtResource("1_ig7tw")
+
+[node name="Cube" type="MeshInstance3D" parent="Player" unique_id=716126986]
+material_override = SubResource("StandardMaterial3D_h2yge")
+mesh = SubResource("BoxMesh_dgwa5")
+surface_material_override/0 = SubResource("StandardMaterial3D_lquwl")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1739207408]
+shape = SubResource("BoxShape3D_34yov")
+
+[node name="AttackHitbox" type="Area3D" parent="Player" unique_id=2127452314]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player/AttackHitbox" unique_id=621802308]
+shape = SubResource("BoxShape3D_dfxch")
+
+[node name="Visual" type="MeshInstance3D" parent="Player/AttackHitbox" unique_id=1608394957]
+mesh = SubResource("BoxMesh_34yov")
+
+[node name="SpecialAOE" type="Area3D" parent="Player" unique_id=1699820856]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player/SpecialAOE" unique_id=500251425]
+shape = SubResource("SphereShape3D_dgwa5")
+
+[node name="Visual" type="MeshInstance3D" parent="Player/SpecialAOE" unique_id=1623345638]
+mesh = SubResource("SphereMesh_dgwa5")
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=421172442]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, 0.34202012, 0, -0.34202012, 0.9396926, 0, 1.5, 16)
+script = ExtResource("3_h2yge")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot" unique_id=1299704229]
+shape = SubResource("SphereShape3D_dfxch")
+spring_length = 6.0
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D" unique_id=1534007134]
+transform = Transform3D(1, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, 0, -4.7683716e-07, 6.000003)
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1575793046]
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD" unique_id=1263448052]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+offset_right = 40.0
+grow_vertical = 0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/MarginContainer" unique_id=1316915765]
+layout_mode = 2
+
+[node name="HUDLabel" type="Label" parent="HUD/MarginContainer/VBoxContainer" unique_id=1125693794]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "IGNITOR
+Lvl. 1
+HP: 100/100"
+script = ExtResource("4_1bvp3")
+
+[node name="Enemy" type="CharacterBody3D" parent="." unique_id=874700758]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, -14)
+script = ExtResource("5_lquwl")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Enemy" unique_id=818472424]
+material_override = SubResource("StandardMaterial3D_34yov")
+mesh = SubResource("BoxMesh_dfxch")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Enemy" unique_id=147445348]
+shape = SubResource("BoxShape3D_fthc2")
+
+[node name="HealthBar" type="Node3D" parent="Enemy" unique_id=2082682622]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="Fill" type="MeshInstance3D" parent="Enemy/HealthBar" unique_id=612101170]
+mesh = SubResource("QuadMesh_dgwa5")
+
+[node name="Outline" type="MeshInstance3D" parent="Enemy/HealthBar" unique_id=598422179]
+mesh = SubResource("QuadMesh_dfxch")
+
+[node name="AttackHitbox" type="Area3D" parent="Enemy" unique_id=586043540]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Enemy/AttackHitbox" unique_id=649782404]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
+shape = SubResource("BoxShape3D_ic1xh")
+
+[node name="Visual" type="MeshInstance3D" parent="Enemy/AttackHitbox" unique_id=1556027141]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
+mesh = SubResource("BoxMesh_fthc2")
